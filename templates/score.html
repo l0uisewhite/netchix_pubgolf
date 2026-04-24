@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block head %}
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">Score Card</h2>
+
+{% if pub %}
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start mb-1">
+      <span class="badge bg-dark fs-6">Hole {{ pub.order_num }} of {{ total_pubs }}</span>
+      <span class="badge bg-warning text-dark fs-6">Par {{ pub.par }} sips</span>
+    </div>
+    <h3 class="card-title mt-2 mb-0">{{ pub.name }}</h3>
+    {% if pub.address %}
+    <p class="text-muted mb-0 mt-1">📍 {{ pub.address }}</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if existing %}
+{% set diff = existing.sips - pub.par %}
+<div class="alert {% if diff < 0 %}alert-success{% elif diff > 0 %}alert-warning{% else %}alert-secondary{% endif %} mb-3">
+  <strong>Score submitted:</strong> {{ existing.sips }} sips
+  ({% if diff > 0 %}+{% endif %}{{ diff }} vs par)
+  — update below if needed.
+</div>
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title">How many sips did you take?</h5>
+    <form method="POST" action="/submit_score">
+      <input type="hidden" name="pub_id" value="{{ pub.id }}">
+      <div class="mb-3">
+        <input type="number" name="sips" class="form-control sips-input"
+               min="0" max="99" placeholder="0" inputmode="numeric"
+               value="{{ existing.sips if existing else '' }}" required>
+      </div>
+      <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
+        Submit Score 🍺
+      </button>
+    </form>
+  </div>
+</div>
+
+{% else %}
+<div class="card shadow-sm text-center p-5">
+  <div style="font-size:3rem">🎉</div>
+  <h3 class="mt-2">Crawl Complete!</h3>
+  <p class="text-muted">All pubs done — check the leaderboard!</p>
+  <a href="/leaderboard" class="btn btn-warning btn-lg mt-2">View Leaderboard</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const socket = io();
+  socket.on('pub_changed', () => location.reload());
+</script>
+{% endblock %}

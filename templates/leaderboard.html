@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block head %}
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-1">🏆 Leaderboard</h2>
+<p class="text-muted small mb-3">Updates live — lower score wins (like golf)</p>
+
+<div id="leaderboard-container">
+  {% include '_leaderboard_table.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const myName = {{ session.player_name | tojson }};
+  const socket = io();
+
+  socket.on('leaderboard_update', function(data) {
+    const rows = data.leaderboard.map(function(p, i) {
+      const isMe = p.name === myName;
+      const sign = p.score > 0 ? '+' : '';
+      const scoreClass = p.score < 0 ? 'text-success fw-bold' : p.score > 0 ? 'text-danger fw-bold' : '';
+      const medals = ['🥇','🥈','🥉'];
+      const pos = i < 3 ? medals[i] : i + 1;
+      return `<tr${isMe ? ' class="table-warning"' : ''}>
+        <td>${pos}</td>
+        <td>${p.name}${isMe ? ' <span class="badge bg-warning text-dark">you</span>' : ''}</td>
+        <td class="${scoreClass}">${sign}${p.score}</td>
+        <td class="text-muted">${p.pubs_completed}</td>
+      </tr>`;
+    });
+
+    const html = `<table class="table table-striped align-middle">
+      <thead class="table-dark">
+        <tr><th>#</th><th>Player</th><th>Score</th><th>Holes</th></tr>
+      </thead>
+      <tbody>${rows.join('')}</tbody>
+    </table>`;
+    document.getElementById('leaderboard-container').innerHTML = html;
+  });
+
+  socket.on('pub_changed', () => location.reload());
+</script>
+{% endblock %}

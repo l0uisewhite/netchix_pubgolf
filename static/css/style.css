@@ -1,0 +1,52 @@
+body {
+  background-color: #fdf8f0;
+  padding-bottom: 75px; /* space for bottom nav */
+}
+
+/* Bottom navigation bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 6px 0;
+  z-index: 1000;
+}
+
+.bottom-nav-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  text-align: center;
+  font-size: 0.7rem;
+  padding: 4px 16px;
+  border-radius: 8px;
+  transition: color 0.15s;
+}
+
+.bottom-nav-link div:first-child {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.bottom-nav-link.active,
+.bottom-nav-link:hover {
+  color: #ffc107;
+}
+
+/* Large sips number input */
+.sips-input {
+  font-size: 3.5rem !important;
+  height: 6rem !important;
+  text-align: center;
+  border-radius: 12px !important;
+}
+
+/* Cards */
+.card {
+  border-radius: 12px;
+  border: none;
+}
+
+.card.border-danger {
+  border: 1px solid #dc3545 !important;
+}

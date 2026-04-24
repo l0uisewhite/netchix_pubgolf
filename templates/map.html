@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  #map { height: 65vh; border-radius: 12px; }
+  .emoji-marker { font-size: 28px; line-height: 1; background: none; border: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">📍 Map</h2>
+
+{% if current_pub %}
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-2">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <span class="fw-bold">🍺 Now: {{ current_pub.name }}</span>
+        {% if current_pub.address %}<br><span class="text-muted small">{{ current_pub.address }}</span>{% endif %}
+      </div>
+      {% if next_pub %}
+      <div class="text-end">
+        <span class="text-muted small">Next:</span><br>
+        <span class="fw-semibold">{{ next_pub.name }}</span>
+      </div>
+      {% else %}
+      <span class="badge bg-success">Last pub!</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="map"></div>
+{% else %}
+<div class="alert alert-info">No pub data loaded yet.</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+{% if current_pub %}
+  const currentPub = {{ current_pub | tojson }};
+  const nextPub = {{ next_pub | tojson }};
+
+  const map = L.map('map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
+  }).addTo(map);
+
+  function emojiIcon(emoji) {
+    return L.divIcon({ html: emoji, className: 'emoji-marker', iconSize: [32, 32], iconAnchor: [16, 16] });
+  }
+
+  const currentMarker = L.marker([currentPub.lat, currentPub.lng], { icon: emojiIcon('🍺') })
+    .addTo(map)
+    .bindPopup(`<b>${currentPub.name}</b><br><em>Current pub</em>`)
+    .openPopup();
+
+  if (nextPub) {
+    const nextMarker = L.marker([nextPub.lat, nextPub.lng], { icon: emojiIcon('⭐') })
+      .addTo(map)
+      .bindPopup(`<b>${nextPub.name}</b><br><em>Next up</em>`);
+
+    L.polyline(
+      [[currentPub.lat, currentPub.lng], [nextPub.lat, nextPub.lng]],
+      { color: '#f0ad00', weight: 3, dashArray: '8, 8' }
+    ).addTo(map);
+
+    const group = L.featureGroup([currentMarker, nextMarker]);
+    map.fitBounds(group.getBounds().pad(0.3));
+  } else {
+    map.setView([currentPub.lat, currentPub.lng], 16);
+  }
+
+  const socket = io();
+  socket.on('pub_changed', () => location.reload());
+{% endif %}
+</script>
+{% endblock %}
