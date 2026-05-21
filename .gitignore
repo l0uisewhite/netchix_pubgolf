@@ -1,0 +1,7 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+pub_crawl.db
+.secret_key
+.DS_Store

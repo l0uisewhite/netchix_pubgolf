@@ -1,18 +1,21 @@
-<table class="table table-striped align-middle">
+<table class="table table-striped align-middle mb-0">
   <thead class="table-dark">
     <tr><th>#</th><th>Player</th><th>Score</th><th>Holes</th></tr>
   </thead>
   <tbody>
     {% for player in leaderboard %}
     {% set isMe = player.name == session.player_name %}
-    <tr{% if isMe %} class="table-warning"{% endif %}>
+    <tr class="{% if loop.index <= 3 %}rank-{{ loop.index }}{% endif %}{% if isMe %} table-warning{% endif %}">
       <td>
         {% if loop.index == 1 %}🥇
         {% elif loop.index == 2 %}🥈
         {% elif loop.index == 3 %}🥉
         {% else %}{{ loop.index }}{% endif %}
       </td>
-      <td>{{ player.name }}{% if isMe %} <span class="badge bg-warning text-dark">you</span>{% endif %}</td>
+      <td>
+        {{ player.name }}
+        {% if isMe %}<span class="badge bg-warning ms-1">you</span>{% endif %}
+      </td>
       <td class="{% if player.score < 0 %}text-success fw-bold{% elif player.score > 0 %}text-danger fw-bold{% endif %}">
         {% if player.score > 0 %}+{% endif %}{{ player.score }}
       </td>

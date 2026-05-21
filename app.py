@@ -153,6 +153,11 @@ def require_login(f):
     def decorated(*args, **kwargs):
         if 'player_id' not in session:
             return redirect(url_for('index'))
+        with get_db() as conn:
+            exists = q(conn, f'SELECT id FROM players WHERE id = {P}', (session['player_id'],)).fetchone()
+        if not exists:
+            session.clear()
+            return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated
 
@@ -169,15 +174,10 @@ def index():
 @app.route('/join', methods=['POST'])
 def join():
     name = request.form.get('name', '').strip()
-    code = request.form.get('code', '').strip()
     if not name:
         return render_template('join.html', error='Please enter your name.')
 
     with get_db() as conn:
-        state = q(conn, 'SELECT join_code FROM crawl_state WHERE id = 1').fetchone()
-        if code != state['join_code']:
-            return render_template('join.html', error='Wrong join code — ask the organiser!')
-
         player = q(conn, f'SELECT id FROM players WHERE name = {P}', (name,)).fetchone()
         if player:
             player_id = player['id']
@@ -189,7 +189,7 @@ def join():
 
     session['player_id'] = player_id
     session['player_name'] = name
-    return redirect(url_for('score'))
+    return redirect(url_for('score'), 303)
 
 
 @app.route('/logout')
@@ -228,18 +228,13 @@ def submit_score():
         return redirect(url_for('score'))
 
     with get_db() as conn:
-        state = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()
-        current_pub = q(conn, f'SELECT id FROM pubs WHERE order_num = {P}', (state['current_pub_order'],)).fetchone()
-        if not current_pub or current_pub['id'] != pub_id:
-            return redirect(url_for('score'))
-
         q(conn, f'''
             INSERT INTO scores (player_id, pub_id, sips) VALUES ({P},{P},{P})
             ON CONFLICT(player_id, pub_id) DO UPDATE SET sips = excluded.sips
         ''', (session['player_id'], pub_id, sips))
 
     socketio.emit('leaderboard_update', {'leaderboard': get_leaderboard()})
-    return redirect(url_for('leaderboard'))
+    return redirect(url_for('score'), 303)
 
 
 @app.route('/leaderboard')
@@ -248,20 +243,42 @@ def leaderboard():
     return render_template('leaderboard.html', leaderboard=get_leaderboard())
 
 
-@app.route('/map')
+@app.route('/wheel')
 @require_login
-def map_view():
-    with get_db() as conn:
-        state = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()
-        current_pub = q(conn, f'SELECT * FROM pubs WHERE order_num = {P}', (state['current_pub_order'],)).fetchone()
-        next_pub = q(conn, f'SELECT * FROM pubs WHERE order_num = {P}', (state['current_pub_order'] + 1,)).fetchone()
+def wheel_view():
+    return render_template('wheel.html')
 
-    return render_template('map.html',
-                           current_pub=dict(current_pub) if current_pub else None,
-                           next_pub=dict(next_pub) if next_pub else None)
+
+@app.route('/map')
+def map_redirect():
+    return redirect(url_for('wheel_view'), 301)
+
+
+@app.route('/next_pub', methods=['POST'])
+@require_login
+def next_pub():
+    with get_db() as conn:
+        order = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()['current_pub_order']
+        total = q(conn, 'SELECT COUNT(*) AS c FROM pubs').fetchone()['c']
+        if order < total:
+            q(conn, 'UPDATE crawl_state SET current_pub_order = current_pub_order + 1 WHERE id = 1')
+            socketio.emit('pub_changed', {})
+    return redirect(url_for('score'), 303)
+
+
+@app.route('/prev_pub', methods=['POST'])
+@require_login
+def prev_pub():
+    with get_db() as conn:
+        order = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()['current_pub_order']
+        if order > 1:
+            q(conn, 'UPDATE crawl_state SET current_pub_order = current_pub_order - 1 WHERE id = 1')
+            socketio.emit('pub_changed', {})
+    return redirect(url_for('score'), 303)
 
 
 @app.route('/admin', methods=['GET', 'POST'])
+@require_login
 def admin():
     error = None
     success = None
@@ -269,53 +286,7 @@ def admin():
     if request.method == 'POST':
         action = request.form.get('action')
 
-        if action == 'login':
-            with get_db() as conn:
-                state = q(conn, 'SELECT admin_password FROM crawl_state WHERE id = 1').fetchone()
-            if request.form.get('password') == state['admin_password']:
-                session['is_admin'] = True
-            else:
-                error = 'Wrong admin password.'
-
-        elif not session.get('is_admin'):
-            return redirect(url_for('admin'))
-
-        elif action == 'next_pub':
-            with get_db() as conn:
-                order = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()['current_pub_order']
-                total = q(conn, 'SELECT COUNT(*) AS c FROM pubs').fetchone()['c']
-                if order < total:
-                    q(conn, 'UPDATE crawl_state SET current_pub_order = current_pub_order + 1 WHERE id = 1')
-                    success = 'Advanced to next pub!'
-                    socketio.emit('pub_changed', {})
-                else:
-                    error = 'Already at the last pub!'
-
-        elif action == 'prev_pub':
-            with get_db() as conn:
-                order = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()['current_pub_order']
-                if order > 1:
-                    q(conn, 'UPDATE crawl_state SET current_pub_order = current_pub_order - 1 WHERE id = 1')
-                    success = 'Back to previous pub.'
-                    socketio.emit('pub_changed', {})
-                else:
-                    error = 'Already at the first pub!'
-
-        elif action == 'update_join_code':
-            new_code = request.form.get('join_code', '').strip()
-            if new_code:
-                with get_db() as conn:
-                    q(conn, f'UPDATE crawl_state SET join_code = {P} WHERE id = 1', (new_code,))
-                success = f'Join code updated to: {new_code}'
-
-        elif action == 'update_admin_password':
-            new_pw = request.form.get('admin_password', '').strip()
-            if new_pw:
-                with get_db() as conn:
-                    q(conn, f'UPDATE crawl_state SET admin_password = {P} WHERE id = 1', (new_pw,))
-                success = 'Admin password updated.'
-
-        elif action == 'reset_scores':
+        if action == 'reset_scores':
             with get_db() as conn:
                 q(conn, 'DELETE FROM scores')
                 q(conn, 'UPDATE crawl_state SET current_pub_order = 1 WHERE id = 1')
@@ -323,16 +294,12 @@ def admin():
             socketio.emit('pub_changed', {})
             success = 'All scores cleared and crawl reset to pub 1.'
 
-    if not session.get('is_admin'):
-        return render_template('admin.html', logged_in=False, error=error)
-
     with get_db() as conn:
         state = dict(q(conn, 'SELECT * FROM crawl_state WHERE id = 1').fetchone())
         current_pub = q(conn, f'SELECT * FROM pubs WHERE order_num = {P}', (state['current_pub_order'],)).fetchone()
         total_pubs = q(conn, 'SELECT COUNT(*) AS c FROM pubs').fetchone()['c']
 
     return render_template('admin.html',
-                           logged_in=True,
                            state=state,
                            current_pub=dict(current_pub) if current_pub else None,
                            total_pubs=total_pubs,

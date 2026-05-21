@@ -1,26 +1,11 @@
 [
-  {
-    "order": 1,
-    "name": "The Starting Arms",
-    "address": "1 Example Street",
-    "lat": 51.5074,
-    "lng": -0.1278,
-    "par": 3
-  },
-  {
-    "order": 2,
-    "name": "The Halfway House",
-    "address": "2 Example Street",
-    "lat": 51.5080,
-    "lng": -0.1265,
-    "par": 4
-  },
-  {
-    "order": 3,
-    "name": "The Final Whistle",
-    "address": "3 Example Street",
-    "lat": 51.5090,
-    "lng": -0.1250,
-    "par": 2
-  }
+  { "order": 1, "name": "Pub 1", "address": "", "lat": 51.5, "lng": -0.1, "par": 3 },
+  { "order": 2, "name": "Pub 2", "address": "", "lat": 51.5, "lng": -0.1, "par": 2 },
+  { "order": 3, "name": "Pub 3", "address": "", "lat": 51.5, "lng": -0.1, "par": 5 },
+  { "order": 4, "name": "Pub 4", "address": "", "lat": 51.5, "lng": -0.1, "par": 1 },
+  { "order": 5, "name": "Pub 5", "address": "", "lat": 51.5, "lng": -0.1, "par": 3 },
+  { "order": 6, "name": "Pub 6", "address": "", "lat": 51.5, "lng": -0.1, "par": 4 },
+  { "order": 7, "name": "Pub 7", "address": "", "lat": 51.5, "lng": -0.1, "par": 6 },
+  { "order": 8, "name": "Pub 8", "address": "", "lat": 51.5, "lng": -0.1, "par": 2 },
+  { "order": 9, "name": "Pub 9", "address": "", "lat": 51.5, "lng": -0.1, "par": 3 }
 ]

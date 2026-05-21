@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-1">🎡 Dare Wheel</h2>
+<p class="text-muted small mb-4">Spin to pick who does a dare!</p>
+
+<div class="wheel-wrap">
+  <div class="wheel-pointer"></div>
+  <canvas id="wheel-canvas"></canvas>
+  <button id="spin-btn" class="btn btn-warning btn-lg px-5">Spin!</button>
+  <div id="wheel-result" class="wheel-result"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const names  = ['Neave', 'Izzy', 'Liv', 'Alice', 'Helena', 'Shrelle', 'Lou'];
+  const colors = ['#f48fb1', '#e91e8c', '#f8bbd9', '#c2185b', '#fce4ec', '#ad1457', '#FFC0CB'];
+
+  const canvas  = document.getElementById('wheel-canvas');
+  const ctx     = canvas.getContext('2d');
+  const btn     = document.getElementById('spin-btn');
+  const result  = document.getElementById('wheel-result');
+
+  const N     = names.length;
+  const slice = (2 * Math.PI) / N;
+
+  let angle   = 0;
+  let running = false;
+
+  function resize() {
+    const size = Math.min(window.innerWidth - 48, 320);
+    canvas.width  = size;
+    canvas.height = size;
+    draw();
+  }
+
+  function draw() {
+    const cx = canvas.width  / 2;
+    const cy = canvas.height / 2;
+    const r  = cx - 4;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < N; i++) {
+      const start = angle + i * slice;
+      const end   = start + slice;
+
+      // Segment
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, end);
+      ctx.closePath();
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Label
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(start + slice / 2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${Math.max(13, r * 0.12)}px Poppins, sans-serif`;
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur  = 4;
+      ctx.fillText(names[i], r - 12, 5);
+      ctx.restore();
+    }
+
+    // Centre hub
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = '#e91e8c';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function spin() {
+    if (running) return;
+    running = true;
+    result.textContent = '';
+    btn.disabled = true;
+
+    const extra    = (5 + Math.random() * 5) * 2 * Math.PI;
+    const duration = 3500 + Math.random() * 1500;
+    const start    = angle;
+    const t0       = performance.now();
+
+    function frame(now) {
+      const t = Math.min((now - t0) / duration, 1);
+      angle   = start + extra * easeOut(t);
+      draw();
+
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        running = false;
+        btn.disabled = false;
+
+        // Pointer is at 12 o'clock = -π/2 in canvas coords.
+        // Find which segment's arc contains that angle.
+        const pointerAngle  = -Math.PI / 2;
+        const relativeAngle = ((pointerAngle - angle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const winner        = Math.floor(relativeAngle / slice) % N;
+        result.style.animation = 'none';
+        result.offsetHeight;   // reflow to restart animation
+        result.style.animation = '';
+        result.textContent = `${names[winner]} does a dare! 🎯`;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  btn.addEventListener('click', spin);
+  window.addEventListener('resize', resize);
+  resize();
+</script>
+{% endblock %}
