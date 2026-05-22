@@ -1,11 +1,11 @@
 [
-  { "order": 1, "name": "Pub 1", "address": "", "lat": 51.5, "lng": -0.1, "par": 3 },
-  { "order": 2, "name": "Pub 2", "address": "", "lat": 51.5, "lng": -0.1, "par": 2 },
-  { "order": 3, "name": "Pub 3", "address": "", "lat": 51.5, "lng": -0.1, "par": 5 },
-  { "order": 4, "name": "Pub 4", "address": "", "lat": 51.5, "lng": -0.1, "par": 1 },
-  { "order": 5, "name": "Pub 5", "address": "", "lat": 51.5, "lng": -0.1, "par": 3 },
-  { "order": 6, "name": "Pub 6", "address": "", "lat": 51.5, "lng": -0.1, "par": 4 },
-  { "order": 7, "name": "Pub 7", "address": "", "lat": 51.5, "lng": -0.1, "par": 6 },
-  { "order": 8, "name": "Pub 8", "address": "", "lat": 51.5, "lng": -0.1, "par": 2 },
-  { "order": 9, "name": "Pub 9", "address": "", "lat": 51.5, "lng": -0.1, "par": 3 }
+  { "order": 1, "name": "The Dove",            "address": "19 Upper Mall, London W6 9TA",                "lat": 51.48994, "lng": -0.22963, "par": 3 },
+  { "order": 2, "name": "The Rutland Arms",    "address": "15 Lower Mall, London W6 9DJ",                "lat": 51.48959, "lng": -0.23152, "par": 2 },
+  { "order": 3, "name": "The Blue Anchor",     "address": "13 Lower Mall, London W6 9DJ",                "lat": 51.48946, "lng": -0.23172, "par": 5 },
+  { "order": 4, "name": "The Blue Boat",       "address": "Distillery Wharf, Parr's Way, London W6 9GD", "lat": 51.487278, "lng": -0.226342, "par": 1 },
+  { "order": 5, "name": "The Crabtree",        "address": "Rainville Rd, London W6 9HA",                 "lat": 51.47688, "lng": -0.22371, "par": 3 },
+  { "order": 6, "name": "The Captain Cook",    "address": "203-205 Dawes Rd, London SW6 7QY",            "lat": 51.47427, "lng": -0.20293, "par": 4 },
+  { "order": 7, "name": "The Little Blue Door","address": "871-873 Fulham Rd, London SW6 5HP",           "lat": 51.47087, "lng": -0.20624, "par": 6 },
+  { "order": 8, "name": "The White Horse",     "address": "1-3 Parsons Green, London SW6 4UL",           "lat": 51.47562, "lng": -0.20141, "par": 2 },
+  { "order": 9, "name": "The Boundary",        "address": "541 King's Rd, London SW6 2EB",               "lat": 51.47945, "lng": -0.18710, "par": 3 }
 ]

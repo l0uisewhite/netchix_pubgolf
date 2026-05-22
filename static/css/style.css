@@ -81,9 +81,9 @@ h1, h2, h3, h4, h5, h6 { color: var(--text); }
   color: var(--text-muted);
   text-decoration: none;
   text-align: center;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 600;
-  padding: 6px 22px;
+  padding: 6px 12px;
   border-radius: 10px;
   transition: color 0.15s, background 0.15s;
   letter-spacing: 0.4px;

@@ -250,8 +250,14 @@ def wheel_view():
 
 
 @app.route('/map')
-def map_redirect():
-    return redirect(url_for('wheel_view'), 301)
+@require_login
+def map_view():
+    with get_db() as conn:
+        state = q(conn, 'SELECT current_pub_order FROM crawl_state WHERE id = 1').fetchone()
+        pubs = q(conn, 'SELECT * FROM pubs ORDER BY order_num').fetchall()
+    return render_template('map.html',
+                           pubs=[dict(p) for p in pubs],
+                           current_order=state['current_pub_order'])
 
 
 @app.route('/next_pub', methods=['POST'])
