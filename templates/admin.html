@@ -33,6 +33,28 @@
   {% endif %}
 </div>
 
+{# ── Delete players ── #}
+<div class="card mb-3">
+  <div class="card-body">
+    <p class="section-label">Remove a Player</p>
+    {% if players %}
+    <div class="d-flex flex-column gap-2">
+      {% for player in players %}
+      <form method="POST" class="d-flex align-items-center justify-content-between gap-2"
+            onsubmit="return confirm('Remove {{ player.name }} and all their scores?')">
+        <input type="hidden" name="action" value="delete_player">
+        <input type="hidden" name="player_id" value="{{ player.id }}">
+        <span class="fw-semibold">{{ player.name }}</span>
+        <button class="btn btn-danger btn-sm px-3">Remove</button>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No players yet.</p>
+    {% endif %}
+  </div>
+</div>
+
 {# ── Danger zone ── #}
 <div class="card border-danger mb-4">
   <div class="card-body">

@@ -284,7 +284,6 @@ def prev_pub():
 
 
 @app.route('/admin', methods=['GET', 'POST'])
-@require_login
 def admin():
     error = None
     success = None
@@ -300,16 +299,28 @@ def admin():
             socketio.emit('pub_changed', {})
             success = 'All scores cleared and crawl reset to pub 1.'
 
+        elif action == 'delete_player':
+            player_id = request.form.get('player_id', type=int)
+            if player_id:
+                with get_db() as conn:
+                    name = q(conn, f'SELECT name FROM players WHERE id = {P}', (player_id,)).fetchone()
+                    q(conn, f'DELETE FROM scores WHERE player_id = {P}', (player_id,))
+                    q(conn, f'DELETE FROM players WHERE id = {P}', (player_id,))
+                socketio.emit('leaderboard_update', {'leaderboard': get_leaderboard()})
+                success = f'Removed {name["name"]}.' if name else 'Player removed.'
+
     with get_db() as conn:
         state = dict(q(conn, 'SELECT * FROM crawl_state WHERE id = 1').fetchone())
         current_pub = q(conn, f'SELECT * FROM pubs WHERE order_num = {P}', (state['current_pub_order'],)).fetchone()
         total_pubs = q(conn, 'SELECT COUNT(*) AS c FROM pubs').fetchone()['c']
+        players = q(conn, 'SELECT id, name FROM players ORDER BY name').fetchall()
 
     return render_template('admin.html',
                            state=state,
                            current_pub=dict(current_pub) if current_pub else None,
                            total_pubs=total_pubs,
                            leaderboard=get_leaderboard(),
+                           players=[dict(p) for p in players],
                            error=error,
                            success=success)
 
